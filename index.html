@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Object Detector & Classifier</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <!-- TensorFlow.js & Teachable Machine Image Library -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-content">
+        <div class="brand">
+          <div class="logo-badge">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"/>
+              <circle cx="12" cy="12" r="3"/>
+              <path d="m4.93 4.93 4.24 4.24m5.66 5.66 4.24 4.24m-14.14 0 4.24-4.24m5.66-5.66 4.24-4.24"/>
+            </svg>
+          </div>
+          <div>
+            <h1>AI Object Detector</h1>
+            <p class="subtitle">Teachable Machine Image Classifier</p>
+          </div>
+        </div>
+
+        <div class="header-badges">
+          <div class="status-pill" id="model-status-pill">
+            <span class="status-dot"></span>
+            <span id="model-status-text">Loading Model...</span>
+          </div>
+          <button class="icon-btn" id="toggle-settings-btn" title="Model Configuration">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Settings Collapsible Panel -->
+      <div class="settings-drawer hidden" id="settings-drawer">
+        <div class="settings-grid">
+          <div class="setting-item">
+            <label for="model-url-input">Model Source URL</label>
+            <div class="input-with-button">
+              <input type="text" id="model-url-input" value="https://teachablemachine.withgoogle.com/models/lIhh7SOKi/">
+              <button class="btn secondary-btn" id="reload-model-btn">Reload</button>
+              <button class="btn ghost-btn" id="use-local-model-btn" title="Use downloaded model in repo">Use Local Model</button>
+            </div>
+            <p class="field-hint">Defaults to <code>https://teachablemachine.withgoogle.com/models/lIhh7SOKi/</code></p>
+          </div>
+          <div class="setting-item">
+            <label>Confidence Threshold: <span id="threshold-val">50%</span></label>
+            <input type="range" id="threshold-slider" min="10" max="95" value="50" step="5">
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Workspace -->
+    <main class="main-content">
+      <div class="workspace-grid">
+
+        <!-- Left Column: Video / Image Input Viewport -->
+        <section class="card viewport-card">
+          <!-- Mode Tabs -->
+          <div class="tabs-header">
+            <div class="tab-buttons">
+              <button class="tab-btn active" data-tab="webcam">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M23 7l-7 5 7 5V7z"/>
+                  <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+                </svg>
+                Live Webcam
+              </button>
+              <button class="tab-btn" data-tab="upload">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="17 8 12 3 7 8"/>
+                  <line x1="12" y1="3" x2="12" y2="15"/>
+                </svg>
+                Upload Image
+              </button>
+            </div>
+
+            <!-- Toolbar Controls -->
+            <div class="viewport-tools">
+              <button class="tool-btn" id="tts-toggle-btn" title="Toggle Voice Announcement">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" id="tts-icon">
+                  <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+                  <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>
+                </svg>
+                <span class="btn-text">Voice Off</span>
+              </button>
+              <button class="tool-btn" id="flip-camera-btn" title="Mirror / Flip Camera">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Viewport Stage -->
+          <div class="viewport-stage">
+            <!-- Scan Beam Effect (active when detecting) -->
+            <div class="scan-beam" id="scan-beam"></div>
+
+            <!-- Live Webcam View -->
+            <div class="view-panel active" id="webcam-view">
+              <div id="webcam-container" class="webcam-wrapper">
+                <div class="placeholder-state" id="webcam-placeholder">
+                  <div class="placeholder-icon">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                      <path d="M23 7l-7 5 7 5V7z"/>
+                      <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+                    </svg>
+                  </div>
+                  <h3>Camera is Inactive</h3>
+                  <p>Click "Start Camera" below to begin live object detection.</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Image Upload View -->
+            <div class="view-panel" id="upload-view">
+              <div class="dropzone" id="dropzone">
+                <input type="file" id="file-input" accept="image/*" class="file-input-hidden">
+                <div class="dropzone-content" id="dropzone-prompt">
+                  <div class="dropzone-icon">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                      <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                      <circle cx="8.5" cy="8.5" r="1.5"/>
+                      <polyline points="21 15 16 10 5 21"/>
+                    </svg>
+                  </div>
+                  <h3>Drag & Drop Image Here</h3>
+                  <p>or click to browse from your device</p>
+                  <span class="file-types-badge">Supports JPG, PNG, WEBP, GIF</span>
+                </div>
+                <div class="uploaded-preview-container hidden" id="preview-container">
+                  <img id="uploaded-image-element" alt="Uploaded target" crossorigin="anonymous">
+                </div>
+              </div>
+            </div>
+
+            <!-- On-Screen Prediction Banner -->
+            <div class="detection-overlay" id="detection-overlay">
+              <div class="detection-badge" id="detection-badge">
+                <span class="pulse-indicator"></span>
+                <span class="badge-label" id="overlay-label">Ready</span>
+                <span class="badge-confidence" id="overlay-confidence">--%</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom Action Buttons for Viewport -->
+          <div class="viewport-footer">
+            <div class="camera-controls" id="webcam-controls">
+              <button class="btn primary-btn" id="start-webcam-btn">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polygon points="5 3 19 12 5 21 5 3"/>
+                </svg>
+                Start Camera
+              </button>
+              <button class="btn danger-btn hidden" id="stop-webcam-btn">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="6" y="6" width="12" height="12"/>
+                </svg>
+                Stop Camera
+              </button>
+              <button class="btn secondary-btn" id="capture-snapshot-btn" disabled>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                  <circle cx="12" cy="13" r="4"/>
+                </svg>
+                Capture Snapshot
+              </button>
+            </div>
+
+            <div class="upload-controls hidden" id="upload-controls">
+              <button class="btn secondary-btn" id="select-new-image-btn">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="17 8 12 3 7 8"/>
+                  <line x1="12" y1="3" x2="12" y2="15"/>
+                </svg>
+                Choose Another Image
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Right Column: Real-time Classification & Analytics -->
+        <section class="card results-card">
+          <div class="card-header">
+            <h2>Real-time Predictions</h2>
+            <div class="telemetry">
+              <span class="telemetry-item" title="Frames Per Second">
+                <span class="telemetry-label">FPS:</span>
+                <span class="telemetry-val" id="fps-counter">0</span>
+              </span>
+              <span class="telemetry-item" title="Inference Latency">
+                <span class="telemetry-label">Latency:</span>
+                <span class="telemetry-val" id="latency-counter">0ms</span>
+              </span>
+            </div>
+          </div>
+
+          <!-- Top Detection Hero Card -->
+          <div class="hero-prediction">
+            <span class="hero-tag">Dominant Detection</span>
+            <div class="hero-main">
+              <div class="hero-name" id="hero-class-name">No Object Detected</div>
+              <div class="hero-score" id="hero-confidence">0%</div>
+            </div>
+            <div class="hero-bar-track">
+              <div class="hero-bar-fill" id="hero-bar-fill" style="width: 0%;"></div>
+            </div>
+          </div>
+
+          <!-- Individual Class Breakdown -->
+          <div class="breakdown-section">
+            <div class="section-title-row">
+              <h3>Class Probability Distribution</h3>
+              <span class="class-count-badge" id="class-count">0 Classes</span>
+            </div>
+            <div class="classes-list" id="classes-list">
+              <!-- Dynamically populated class prediction bars -->
+              <div class="empty-list-placeholder">Model is initializing...</div>
+            </div>
+          </div>
+
+          <!-- Model Information Box -->
+          <div class="model-meta-box">
+            <h4>Model Specs</h4>
+            <div class="meta-row">
+              <span>Model Name</span>
+              <strong id="meta-model-name">tm-my-image-model</strong>
+            </div>
+            <div class="meta-row">
+              <span>Input Resolution</span>
+              <strong>224 × 224 px</strong>
+            </div>
+            <div class="meta-row">
+              <span>Classes</span>
+              <strong id="meta-classes-list">Class 1, Class 2</strong>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- Snapshot Gallery Section -->
+      <section class="card gallery-card" id="gallery-card">
+        <div class="card-header">
+          <div class="gallery-title-group">
+            <h2>Detection Snapshots</h2>
+            <span class="badge" id="snapshot-count">0 saved</span>
+          </div>
+          <button class="btn ghost-btn text-danger" id="clear-snapshots-btn" style="display: none;">
+            Clear All
+          </button>
+        </div>
+        <div class="gallery-grid" id="gallery-grid">
+          <div class="gallery-empty" id="gallery-empty">
+            <p>No snapshots taken yet. Click "Capture Snapshot" while the camera is running to save detections here.</p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      <p>Trained with <a href="https://teachablemachine.withgoogle.com/" target="_blank" rel="noopener">Google Teachable Machine</a> | Model ID: <code>lIhh7SOKi</code></p>
+      <p>Ready to deploy on <a href="https://pages.github.com/" target="_blank" rel="noopener">GitHub Pages</a>.</p>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
