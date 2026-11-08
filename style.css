@@ -1058,3 +1058,54 @@ input[type="range"] {
   padding: 2px 6px;
   border-radius: 4px;
 }
+
+/* Mobile & Android Optimizations */
+@media (max-width: 640px) {
+  .app-container {
+    padding: 12px 10px 32px;
+    gap: 16px;
+  }
+
+  .app-header {
+    padding: 12px 16px;
+  }
+
+  .brand h1 {
+    font-size: 1.15rem;
+  }
+
+  .tabs-header {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .viewport-tools {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .viewport-stage {
+    max-height: 380px;
+  }
+
+  .camera-controls, .upload-controls {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .camera-controls .btn, .upload-controls .btn {
+    flex: 1;
+    min-height: 44px;
+    justify-content: center;
+  }
+
+  .hero-main {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .hero-score {
+    font-size: 1.75rem;
+  }
+}

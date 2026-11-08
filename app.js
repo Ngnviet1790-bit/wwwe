@@ -18,7 +18,8 @@
     webcam: null,
     isWebcamRunning: false,
     currentTab: 'webcam', // 'webcam' | 'upload'
-    isMirrored: true,
+    facingMode: 'environment', // 'environment' (back) | 'user' (front)
+    isMirrored: false,
     voiceEnabled: false,
     threshold: 0.50,
     animationFrameId: null,
@@ -53,6 +54,8 @@
     ttsToggleBtn: document.getElementById('tts-toggle-btn'),
     ttsIcon: document.getElementById('tts-icon'),
     flipCameraBtn: document.getElementById('flip-camera-btn'),
+    switchFacingBtn: document.getElementById('switch-facing-btn'),
+    facingModeLabel: document.getElementById('facing-mode-label'),
 
     // Upload / Dropzone
     dropzone: document.getElementById('dropzone'),
@@ -97,7 +100,16 @@
   // --- Initialize App ---
   async function init() {
     setupEventListeners();
+    registerServiceWorker();
     await loadModel(DEFAULT_MODEL_URL);
+  }
+
+  function registerServiceWorker() {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js')
+        .then(() => console.log('Service Worker registered successfully'))
+        .catch(err => console.log('Service Worker registration skipped:', err));
+    }
   }
 
   // --- Model Loading ---
@@ -180,8 +192,10 @@
       // Teachable Machine Webcam helper (width, height, flip)
       const width = 480;
       const height = 360;
-      state.webcam = new window.tmImage.Webcam(width, height, state.isMirrored);
-      await state.webcam.setup({ facingMode: "user" });
+      // Front camera usually mirrored; rear camera not mirrored
+      const flip = state.facingMode === 'user' ? state.isMirrored : false;
+      state.webcam = new window.tmImage.Webcam(width, height, flip);
+      await state.webcam.setup({ facingMode: state.facingMode });
       await state.webcam.play();
 
       // UI switches
@@ -496,6 +510,20 @@
     el.flipCameraBtn.addEventListener('click', () => {
       state.isMirrored = !state.isMirrored;
       el.webcamContainer.classList.toggle('mirrored', state.isMirrored);
+    });
+
+    // Switch Front / Back Camera (Android & Mobile)
+    el.switchFacingBtn.addEventListener('click', async () => {
+      state.facingMode = state.facingMode === 'environment' ? 'user' : 'environment';
+      const isBack = state.facingMode === 'environment';
+      el.facingModeLabel.textContent = isBack ? "Back Cam" : "Front Cam";
+      state.isMirrored = !isBack;
+      el.webcamContainer.classList.toggle('mirrored', state.isMirrored);
+
+      if (state.isWebcamRunning) {
+        stopWebcam();
+        await startWebcam();
+      }
     });
 
     // TTS Voice Feedback

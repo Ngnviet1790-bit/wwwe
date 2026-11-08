@@ -2,8 +2,15 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>AI Object Detector & Classifier</title>
+  <meta name="theme-color" content="#0B0F19">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/svg+xml" href="icon.svg">
+  <link rel="apple-touch-icon" href="icon-192.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -93,6 +100,15 @@
 
             <!-- Toolbar Controls -->
             <div class="viewport-tools">
+              <button class="tool-btn" id="switch-facing-btn" title="Switch Front/Back Camera (Mobile / Android)">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M20 7h-3a2 2 0 0 1-2-2V2"/>
+                  <path d="M9 18a6 6 0 0 1 6-6h4"/>
+                  <polyline points="15 8 19 12 15 16"/>
+                  <circle cx="9" cy="9" r="2"/>
+                </svg>
+                <span class="btn-text" id="facing-mode-label">Back Cam</span>
+              </button>
               <button class="tool-btn" id="tts-toggle-btn" title="Toggle Voice Announcement">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" id="tts-icon">
                   <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
